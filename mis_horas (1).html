@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0F6E56">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Mis Horas">
+<title>Mis Horas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --green: #1D9E75;
+    --green-dark: #0F6E56;
+    --green-light: #E1F5EE;
+    --green-mid: #5DCAA5;
+    --bg: #F7F6F2;
+    --surface: #FFFFFF;
+    --surface2: #F0EEE8;
+    --text: #1A1A18;
+    --text2: #6B6B65;
+    --text3: #9E9E97;
+    --border: rgba(0,0,0,0.08);
+    --red: #E24B4A;
+    --radius: 14px;
+    --radius-sm: 8px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; background: var(--bg); font-family: 'DM Sans', sans-serif; color: var(--text); overflow: hidden; }
+
+  .shell { display: flex; flex-direction: column; height: 100dvh; max-width: 430px; margin: 0 auto; background: var(--bg); }
+
+  /* Header */
+  .header { background: var(--green-dark); color: white; padding: 3rem 1.25rem 1.25rem; position: relative; flex-shrink: 0; }
+  .header-title { font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; opacity: 0.7; margin-bottom: 4px; }
+  .month-nav { display: flex; align-items: center; justify-content: space-between; }
+  .month-label { font-size: 24px; font-weight: 600; }
+  .nav-btn { background: rgba(255,255,255,0.15); border: none; color: white; width: 36px; height: 36px; border-radius: 50%; font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+  .nav-btn:active { background: rgba(255,255,255,0.25); }
+
+  /* Tab bar */
+  .tab-bar { display: flex; background: var(--surface); border-bottom: 1px solid var(--border); flex-shrink: 0; }
+  .tab { flex: 1; padding: 12px 4px 10px; border: none; background: none; font-family: 'DM Sans', sans-serif; font-size: 12px; color: var(--text3); cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 3px; border-bottom: 2px solid transparent; transition: all 0.15s; }
+  .tab svg { width: 20px; height: 20px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+  .tab.active { color: var(--green-dark); border-bottom-color: var(--green); }
+
+  /* Screens */
+  .screens { flex: 1; overflow: hidden; position: relative; }
+  .screen { position: absolute; inset: 0; overflow-y: auto; display: none; padding: 1rem; -webkit-overflow-scrolling: touch; }
+  .screen.active { display: block; }
+
+  /* Cards */
+  .card { background: var(--surface); border-radius: var(--radius); border: 1px solid var(--border); padding: 1rem 1.1rem; margin-bottom: 10px; }
+  .card-label { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text3); margin-bottom: 10px; font-weight: 500; }
+
+  /* Form */
+  .row { display: flex; gap: 8px; align-items: flex-end; margin-bottom: 10px; }
+  .field { display: flex; flex-direction: column; gap: 4px; flex: 1; }
+  .field label { font-size: 12px; color: var(--text2); }
+  .field input, .field select { font-family: 'DM Sans', sans-serif; font-size: 16px; background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 12px; color: var(--text); outline: none; width: 100%; }
+  .field input:focus, .field select:focus { border-color: var(--green); }
+  .btn-add { background: var(--green); color: white; border: none; border-radius: var(--radius-sm); padding: 10px 16px; font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 500; cursor: pointer; white-space: nowrap; height: 44px; display: flex; align-items: center; gap: 4px; }
+  .btn-add:active { background: var(--green-dark); }
+
+  /* Day list */
+  .day-list { display: flex; flex-direction: column; gap: 6px; }
+  .day-row { display: flex; align-items: center; justify-content: space-between; background: var(--surface2); border-radius: var(--radius-sm); padding: 10px 12px; }
+  .day-info { flex: 1; }
+  .day-name { font-size: 15px; font-weight: 500; }
+  .day-note { font-size: 12px; color: var(--text3); margin-top: 2px; }
+  .day-right { display: flex; align-items: center; gap: 12px; }
+  .hours-badge { font-family: 'DM Mono', monospace; font-size: 15px; font-weight: 500; color: var(--green-dark); }
+  .del-btn { background: none; border: none; color: var(--text3); font-size: 18px; cursor: pointer; padding: 4px; line-height: 1; }
+  .del-btn:active { color: var(--red); }
+
+  /* Summary */
+  .pay-box { background: var(--green-dark); color: white; border-radius: var(--radius); padding: 1.25rem; margin-bottom: 10px; }
+  .pay-label { font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; opacity: 0.7; margin-bottom: 6px; }
+  .pay-amount { font-family: 'DM Mono', monospace; font-size: 36px; font-weight: 500; line-height: 1; }
+  .pay-sub { font-size: 12px; opacity: 0.65; margin-top: 6px; }
+  .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; }
+  .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px; }
+  .stat-label { font-size: 11px; color: var(--text3); margin-bottom: 4px; }
+  .stat-val { font-family: 'DM Mono', monospace; font-size: 22px; font-weight: 500; color: var(--text); }
+  .stat-unit { font-size: 11px; color: var(--text3); margin-top: 2px; }
+
+  .breakdown-row { display: flex; justify-content: space-between; align-items: center; padding: 9px 0; border-bottom: 1px solid var(--border); }
+  .breakdown-row:last-child { border-bottom: none; }
+  .bd-left { font-size: 14px; color: var(--text2); }
+  .bd-right { font-family: 'DM Mono', monospace; font-size: 13px; color: var(--text); }
+
+  /* Config */
+  .cfg-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--border); }
+  .cfg-row:last-of-type { border-bottom: none; }
+  .cfg-label { font-size: 14px; color: var(--text); }
+  .cfg-row input, .cfg-row select { font-family: 'DM Sans', sans-serif; font-size: 15px; background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 8px 10px; color: var(--text); outline: none; width: 140px; text-align: right; }
+  .btn-save { width: 100%; padding: 12px; background: var(--green); color: white; border: none; border-radius: var(--radius-sm); font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 500; cursor: pointer; margin-top: 12px; }
+  .btn-save:active { background: var(--green-dark); }
+  .btn-danger { width: 100%; padding: 12px; background: var(--surface2); color: var(--red); border: 1px solid var(--border); border-radius: var(--radius-sm); font-family: 'DM Sans', sans-serif; font-size: 15px; cursor: pointer; }
+  .notif-status { display: flex; align-items: center; gap: 8px; padding: 10px 0; font-size: 13px; color: var(--text2); }
+  .notif-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--text3); flex-shrink: 0; }
+  .notif-dot.on { background: var(--green); }
+  .btn-notif { width: 100%; padding: 12px; background: var(--surface2); color: var(--green-dark); border: 1px solid var(--border); border-radius: var(--radius-sm); font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 500; cursor: pointer; margin-bottom: 8px; }
+
+  .empty { text-align: center; padding: 2rem 1rem; color: var(--text3); font-size: 14px; line-height: 1.6; }
+  .empty-icon { font-size: 32px; margin-bottom: 8px; }
+
+  /* Toast */
+  .toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%) translateY(10px); background: #1A1A18; color: white; padding: 10px 20px; border-radius: 100px; font-size: 14px; opacity: 0; transition: all 0.25s; pointer-events: none; z-index: 999; white-space: nowrap; }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* Install banner */
+  .install-banner { background: var(--green-light); border: 1px solid var(--green-mid); border-radius: var(--radius); padding: 12px 14px; margin-bottom: 10px; font-size: 13px; color: var(--green-dark); display: flex; align-items: flex-start; gap: 10px; }
+  .install-banner strong { display: block; margin-bottom: 3px; font-size: 14px; }
+  .install-close { background: none; border: none; color: var(--green-dark); font-size: 18px; cursor: pointer; margin-left: auto; align-self: flex-start; line-height: 1; }
+</style>
+</head>
+<body>
+<div class="shell">
+  <div class="header">
+    <div class="header-title">Mis Horas</div>
+    <div class="month-nav">
+      <button class="nav-btn" onclick="changeMonth(-1)">‹</button>
+      <span class="month-label" id="month-label">Mes Año</span>
+      <button class="nav-btn" onclick="changeMonth(1)">›</button>
+    </div>
+  </div>
+
+  <div class="tab-bar">
+    <button class="tab active" onclick="showTab('registro')">
+      <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      Registro
+    </button>
+    <button class="tab" onclick="showTab('resumen')">
+      <svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+      Resumen
+    </button>
+    <button class="tab" onclick="showTab('config')">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      Config
+    </button>
+  </div>
+
+  <div class="screens">
+    <!-- REGISTRO -->
+    <div class="screen active" id="tab-registro">
+      <div id="install-hint" class="install-banner" style="display:none">
+        <div>
+          <strong>💡 Agrégala a tu pantalla</strong>
+          Toca el menú del navegador (⋮) → "Agregar a pantalla de inicio" para usarla como app.
+        </div>
+        <button class="install-close" onclick="document.getElementById('install-hint').style.display='none'">×</button>
+      </div>
+
+      <div class="card">
+        <div class="card-label">Nuevo registro</div>
+        <div class="row">
+          <div class="field">
+            <label>Día</label>
+            <input type="number" id="in-day" min="1" max="31" placeholder="15" inputmode="numeric">
+          </div>
+          <div class="field">
+            <label>Horas</label>
+            <input type="number" id="in-hours" min="0.5" max="24" step="0.5" placeholder="8" inputmode="decimal">
+          </div>
+          <button class="btn-add" onclick="addEntry()">+ Añadir</button>
+        </div>
+        <div class="field">
+          <label>Nota (opcional)</label>
+          <input type="text" id="in-note" placeholder="Ej: turno extra, reunión...">
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-label" id="list-header">Días registrados</div>
+        <div class="day-list" id="day-list"></div>
+      </div>
+    </div>
+
+    <!-- RESUMEN -->
+    <div class="screen" id="tab-resumen">
+      <div class="pay-box">
+        <div class="pay-label">Total a cobrar</div>
+        <div class="pay-amount" id="pay-total">$0</div>
+        <div class="pay-sub" id="pay-sub">— sin registros</div>
+      </div>
+
+      <div class="stat-grid">
+        <div class="stat-card">
+          <div class="stat-label">Horas totales</div>
+          <div class="stat-val" id="s-hours">0</div>
+          <div class="stat-unit">horas</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Días trabajados</div>
+          <div class="stat-val" id="s-days">0</div>
+          <div class="stat-unit">días</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Promedio/día</div>
+          <div class="stat-val" id="s-avg">0</div>
+          <div class="stat-unit">horas</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Tarifa/hora</div>
+          <div class="stat-val" id="s-rate">—</div>
+          <div class="stat-unit" id="s-currency">—</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-label">Detalle del mes</div>
+        <div id="breakdown"></div>
+      </div>
+    </div>
+
+    <!-- CONFIG -->
+    <div class="screen" id="tab-config">
+      <div class="card">
+        <div class="card-label">Pago</div>
+        <div class="cfg-row">
+          <span class="cfg-label">Tarifa por hora</span>
+          <input type="number" id="cfg-rate" inputmode="decimal" placeholder="15000">
+        </div>
+        <div class="cfg-row">
+          <span class="cfg-label">Moneda</span>
+          <select id="cfg-currency">
+            <option value="COP">COP ($)</option>
+            <option value="USD">USD ($)</option>
+            <option value="EUR">EUR (€)</option>
+            <option value="MXN">MXN ($)</option>
+          </select>
+        </div>
+        <button class="btn-save" onclick="saveConfig()">Guardar</button>
+      </div>
+
+      <div class="card">
+        <div class="card-label">Recordatorio diario</div>
+        <div style="font-size:13px;color:var(--text3);margin-bottom:12px;line-height:1.5">Te avisa a las 6:00 PM si aún no registraste las horas del día. Debes tener la app abierta o agregada a la pantalla de inicio.</div>
+        <div class="notif-status"><div class="notif-dot" id="notif-dot"></div><span id="notif-label">Cargando...</span></div>
+        <button class="btn-notif" id="btn-notif" onclick="toggleNotif()">Activar recordatorio</button>
+      </div>
+
+      <div class="card">
+        <div class="card-label">Datos</div>
+        <div style="font-size:13px;color:var(--text3);margin-bottom:12px;line-height:1.5">Los datos se guardan en este teléfono. Si borras el caché del navegador, los datos se pierden.</div>
+        <button class="btn-danger" onclick="clearMonth()">Borrar registros del mes actual</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const MONTHS = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+let data = JSON.parse(localStorage.getItem('mis_horas_v1') || '{"entries":{},"rate":15000,"currency":"COP"}');
+let cy = new Date().getFullYear(), cm = new Date().getMonth();
+
+function save() { localStorage.setItem('mis_horas_v1', JSON.stringify(data)); }
+function mkey() { return cy + '-' + String(cm+1).padStart(2,'0'); }
+function entries() { return data.entries[mkey()] || []; }
+
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2000);
+}
+
+function showTab(name) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  const idx = {registro:0,resumen:1,config:2}[name];
+  document.querySelectorAll('.tab')[idx].classList.add('active');
+  render();
+}
+
+function changeMonth(d) {
+  cm += d;
+  if (cm > 11) { cm = 0; cy++; }
+  if (cm < 0) { cm = 11; cy--; }
+  render();
+}
+
+function addEntry() {
+  const day = parseInt(document.getElementById('in-day').value);
+  const hours = parseFloat(document.getElementById('in-hours').value);
+  const note = document.getElementById('in-note').value.trim();
+  if (!day || day < 1 || day > 31 || !hours || hours <= 0) { toast('⚠ Ingresa día y horas válidos'); return; }
+  let list = entries();
+  const idx = list.findIndex(e => e.day === day);
+  if (idx >= 0) list[idx] = { day, hours, note };
+  else { list.push({ day, hours, note }); list.sort((a,b) => a.day - b.day); }
+  data.entries[mkey()] = list;
+  save();
+  document.getElementById('in-day').value = '';
+  document.getElementById('in-hours').value = '';
+  document.getElementById('in-note').value = '';
+  toast('✓ Guardado');
+  render();
+}
+
+function deleteEntry(day) {
+  data.entries[mkey()] = entries().filter(e => e.day !== day);
+  save(); render();
+}
+
+function saveConfig() {
+  const rate = parseFloat(document.getElementById('cfg-rate').value);
+  const currency = document.getElementById('cfg-currency').value;
+  if (!rate || rate <= 0) { toast('⚠ Ingresa una tarifa válida'); return; }
+  data.rate = rate; data.currency = currency;
+  save(); toast('✓ Configuración guardada'); render();
+}
+
+function clearMonth() {
+  if (confirm('¿Borrar todos los registros de ' + MONTHS[cm] + ' ' + cy + '?')) {
+    delete data.entries[mkey()]; save(); render(); toast('Mes borrado');
+  }
+}
+
+function fmt(n) {
+  return new Intl.NumberFormat('es-CO', { style: 'currency', currency: data.currency, minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(n);
+}
+
+function render() {
+  document.getElementById('month-label').textContent = MONTHS[cm] + ' ' + cy;
+  const list = entries();
+  const totalH = list.reduce((s,e) => s+e.hours, 0);
+  const totalPay = totalH * (data.rate || 0);
+  const avg = list.length ? totalH / list.length : 0;
+
+  // List
+  const lh = document.getElementById('list-header');
+  if (lh) lh.textContent = list.length ? list.length + ' día' + (list.length>1?'s':'') + ' · ' + totalH.toFixed(1) + 'h total' : 'Días registrados';
+  const dl = document.getElementById('day-list');
+  if (dl) {
+    if (!list.length) {
+      dl.innerHTML = '<div class="empty"><div class="empty-icon">📋</div>Sin registros este mes.<br>Agrega tu primer día arriba.</div>';
+    } else {
+      dl.innerHTML = list.map(e => `<div class="day-row">
+        <div class="day-info">
+          <div class="day-name">Día ${e.day} — ${MONTHS[cm].substring(0,3)}</div>
+          ${e.note ? `<div class="day-note">${e.note}</div>` : ''}
+        </div>
+        <div class="day-right">
+          <span class="hours-badge">${e.hours}h</span>
+          <button class="del-btn" onclick="deleteEntry(${e.day})">🗑</button>
+        </div>
+      </div>`).join('');
+    }
+  }
+
+  // Resumen
+  const pt = document.getElementById('pay-total');
+  if (pt) pt.textContent = fmt(totalPay);
+  const ps = document.getElementById('pay-sub');
+  if (ps) ps.textContent = list.length ? `${data.currency} · ${data.rate?.toLocaleString('es-CO')}/hora · ${totalH.toFixed(1)}h trabajadas` : '— sin registros este mes';
+  const sh = document.getElementById('s-hours'); if (sh) sh.textContent = totalH.toFixed(1);
+  const sd = document.getElementById('s-days'); if (sd) sd.textContent = list.length;
+  const sa = document.getElementById('s-avg'); if (sa) sa.textContent = avg.toFixed(1);
+  const sr = document.getElementById('s-rate'); if (sr) sr.textContent = (data.rate||0).toLocaleString('es-CO');
+  const sc = document.getElementById('s-currency'); if (sc) sc.textContent = data.currency + '/hora';
+
+  const bd = document.getElementById('breakdown');
+  if (bd) {
+    if (!list.length) { bd.innerHTML = '<div class="empty" style="padding:1rem 0">Sin registros</div>'; }
+    else { bd.innerHTML = list.map(e => `<div class="breakdown-row"><span class="bd-left">Día ${e.day}${e.note?' · '+e.note:''}</span><span class="bd-right">${e.hours}h · ${fmt(e.hours*data.rate)}</span></div>`).join(''); }
+  }
+
+  // Config
+  const cr = document.getElementById('cfg-rate'); if (cr && !cr.value) cr.value = data.rate || '';
+  const cc = document.getElementById('cfg-currency'); if (cc) cc.value = data.currency || 'COP';
+
+  // Install hint
+  const hint = document.getElementById('install-hint');
+  if (hint && !localStorage.getItem('hint_closed')) hint.style.display = 'flex';
+}
+
+document.getElementById('install-hint')?.querySelector('.install-close')?.addEventListener('click', () => {
+  localStorage.setItem('hint_closed','1');
+});
+
+// ── Notificaciones ──────────────────────────────────────────
+let notifTimer = null;
+
+function todayHasEntry() {
+  const now = new Date();
+  const key = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0');
+  const list = data.entries[key] || [];
+  return list.some(e => e.day === now.getDate());
+}
+
+function scheduleNotif() {
+  if (notifTimer) clearTimeout(notifTimer);
+  const now = new Date();
+  const target = new Date(now);
+  target.setHours(18, 0, 0, 0);
+  if (now >= target) target.setDate(target.getDate() + 1);
+  const ms = target - now;
+  notifTimer = setTimeout(() => {
+    if (!todayHasEntry() && Notification.permission === 'granted') {
+      new Notification('⏰ Mis Horas', {
+        body: '¡Todavía no registraste las horas de hoy! Toca para abrir la app.',
+        icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="14" fill="%230F6E56"/><text x="32" y="44" text-anchor="middle" font-size="36" fill="white">⏱</text></svg>',
+        tag: 'mis-horas-reminder',
+        renotify: true
+      });
+    }
+    scheduleNotif();
+  }, ms);
+}
+
+function updateNotifUI() {
+  const dot = document.getElementById('notif-dot');
+  const lbl = document.getElementById('notif-label');
+  const btn = document.getElementById('btn-notif');
+  if (!dot || !lbl || !btn) return;
+  const perm = Notification.permission;
+  const enabled = localStorage.getItem('notif_enabled') === '1';
+  if (perm === 'granted' && enabled) {
+    dot.classList.add('on');
+    lbl.textContent = 'Recordatorio activo — todos los días a las 6:00 PM';
+    btn.textContent = 'Desactivar recordatorio';
+  } else if (perm === 'denied') {
+    dot.classList.remove('on');
+    lbl.textContent = 'Bloqueado — habilita notificaciones en Ajustes del teléfono';
+    btn.textContent = 'Notificaciones bloqueadas';
+    btn.disabled = true;
+  } else {
+    dot.classList.remove('on');
+    lbl.textContent = 'Recordatorio desactivado';
+    btn.textContent = 'Activar recordatorio';
+    btn.disabled = false;
+  }
+}
+
+async function toggleNotif() {
+  const enabled = localStorage.getItem('notif_enabled') === '1';
+  if (enabled) {
+    localStorage.setItem('notif_enabled', '0');
+    if (notifTimer) { clearTimeout(notifTimer); notifTimer = null; }
+    toast('Recordatorio desactivado');
+    updateNotifUI();
+    return;
+  }
+  if (!('Notification' in window)) { toast('Tu navegador no soporta notificaciones'); return; }
+  const perm = await Notification.requestPermission();
+  if (perm === 'granted') {
+    localStorage.setItem('notif_enabled', '1');
+    scheduleNotif();
+    toast('✓ Recordatorio activado para las 6:00 PM');
+  } else {
+    toast('⚠ Permiso denegado');
+  }
+  updateNotifUI();
+}
+
+if (localStorage.getItem('notif_enabled') === '1' && Notification.permission === 'granted') {
+  scheduleNotif();
+}
+
+render();
+updateNotifUI();
+</script>
+</body>
+</html>
